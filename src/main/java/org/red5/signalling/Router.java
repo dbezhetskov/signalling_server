@@ -1,4 +1,4 @@
-package org.red5.signalling.server;
+package org.red5.signalling;
 
 import java.util.List;
 import java.util.Map;

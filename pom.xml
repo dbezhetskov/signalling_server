@@ -227,9 +227,9 @@
             <artifactId>spring-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.red5</groupId>
-            <artifactId>websocket</artifactId>
-            <version>1.4</version>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-websocket</artifactId>
+            <version>8.0.33</version>
         </dependency>
         <dependency>
             <groupId>net.minidev</groupId>

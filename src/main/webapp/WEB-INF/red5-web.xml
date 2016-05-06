@@ -24,26 +24,6 @@
         <property name="virtualHosts" value="${webapp.virtualHosts}" />
     </bean>
 
-    <bean id="web.handler" class="org.red5.signalling.chat.Application" />
-
-    <bean id="router" class="org.red5.signalling.chat.Router">
-        <property name="app" ref="web.handler" />
-    </bean>
-
-    <!-- WebSocket scope with our listeners -->
-    <bean id="webSocketScopeDefault" class="org.red5.net.websocket.WebSocketScope">
-        <!-- Application scope -->
-        <property name="scope" ref="web.scope" />
-        <!-- The path to which this scope is attached. The special value of "default" 
-            means that it will be added to all paths -->
-        <property name="path" value="default" />
-        <property name="listeners">
-            <list>
-                <bean id="chatListener" class="org.red5.signalling.chat.WebSocketChatDataListener">
-                    <property name="router" ref="router" />
-                </bean>
-            </list>
-        </property>
-    </bean>
+    <bean id="web.handler" class="org.red5.signalling.Application" />
 
 </beans>

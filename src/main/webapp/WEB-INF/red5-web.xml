@@ -24,9 +24,9 @@
         <property name="virtualHosts" value="${webapp.virtualHosts}" />
     </bean>
 
-    <bean id="web.handler" class="org.red5.demos.chat.Application" />
+    <bean id="web.handler" class="org.red5.signalling.chat.Application" />
 
-    <bean id="router" class="org.red5.demos.chat.Router">
+    <bean id="router" class="org.red5.signalling.chat.Router">
         <property name="app" ref="web.handler" />
     </bean>
 
@@ -39,7 +39,7 @@
         <property name="path" value="default" />
         <property name="listeners">
             <list>
-                <bean id="chatListener" class="org.red5.demos.chat.WebSocketChatDataListener">
+                <bean id="chatListener" class="org.red5.signalling.chat.WebSocketChatDataListener">
                     <property name="router" ref="router" />
                 </bean>
             </list>

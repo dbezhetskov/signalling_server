@@ -1,4 +1,4 @@
-package org.red5.demos.chat;
+package org.red5.signalling.server;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
@@ -25,7 +25,7 @@ import org.slf4j.Logger;
  */
 public class WebSocketChatDataListener extends WebSocketDataListener {
 
-    private static final Logger log = Red5LoggerFactory.getLogger(WebSocketChatDataListener.class, "chat");
+    private static final Logger log = Red5LoggerFactory.getLogger(WebSocketChatDataListener.class, "signalling");
 
     {
         setProtocol("chat");

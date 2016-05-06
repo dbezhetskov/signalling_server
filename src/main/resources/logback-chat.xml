@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-	<contextName>chat</contextName>
+	<contextName>signalling</contextName>
 	
-	<jmxConfigurator contextName="chat" />
+	<jmxConfigurator contextName="signalling" />
 	
-	<appender name="chat" class="ch.qos.logback.core.FileAppender">
-		<File>log/chat.log</File>
+	<appender name="signalling" class="ch.qos.logback.core.FileAppender">
+		<File>log/signalling.log</File>
 		<Append>false</Append>
 		<Encoding>UTF-8</Encoding>
 		<BufferedIO>false</BufferedIO>
@@ -20,7 +20,7 @@
 		
 	<root>
 		<level value="TRACE" />
-        <appender-ref ref="chat" />
+        <appender-ref ref="signalling" />
 	</root>
 						
 </configuration>

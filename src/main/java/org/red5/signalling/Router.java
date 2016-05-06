@@ -1,4 +1,4 @@
-package org.red5.demos.chat;
+package org.red5.signalling.server;
 
 import java.util.List;
 import java.util.Map;
@@ -20,7 +20,7 @@ import org.slf4j.Logger;
  */
 public class Router {
 
-    private static Logger log = Red5LoggerFactory.getLogger(Router.class, "chat");
+    private static Logger log = Red5LoggerFactory.getLogger(Router.class, "signalling");
 
     private Application app;
 

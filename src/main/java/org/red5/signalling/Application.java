@@ -1,4 +1,4 @@
-package org.red5.demos.chat;
+package org.red5.signalling.server;
 
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.net.websocket.WebSocketPlugin;
@@ -12,13 +12,13 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 /**
- * Main application entry point for the chat application.
+ * Main application entry point for the signalling server application.
  * 
  * @author Paul Gregoire
  */
 public class Application extends MultiThreadedApplicationAdapter implements ApplicationContextAware {
 
-    private static Logger log = Red5LoggerFactory.getLogger(Application.class, "chat");
+    private static Logger log = Red5LoggerFactory.getLogger(Application.class, "signalling");
 
     @SuppressWarnings("unused")
     private ApplicationContext applicationContext;
@@ -30,7 +30,7 @@ public class Application extends MultiThreadedApplicationAdapter implements Appl
 
     @Override
     public boolean appStart(IScope scope) {
-        log.info("Chat starting");
+        log.info("Server starting");
         // add our application to enable websocket support
         WebSocketScopeManager manager = ((WebSocketPlugin) PluginRegistry.getPlugin("WebSocketPlugin")).getManager();
         manager.addApplication(scope);
@@ -39,7 +39,7 @@ public class Application extends MultiThreadedApplicationAdapter implements Appl
 
     @Override
     public void appStop(IScope scope) {
-        log.info("Chat stopping");
+        log.info("Server stopping");
         // remove our app
         WebSocketScopeManager manager = ((WebSocketPlugin) PluginRegistry.getPlugin("WebSocketPlugin")).getManager();
         manager.removeApplication(scope);

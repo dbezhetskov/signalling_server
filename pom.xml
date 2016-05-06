@@ -2,11 +2,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.red5.demos</groupId>
-    <artifactId>chat</artifactId>
+    <groupId>org.red5.signalling</groupId>
+    <artifactId>signalling</artifactId>
     <packaging>war</packaging>
-    <name>chat</name>
-    <description>chat application</description>
+    <name>signalling</name>
+    <description>signalling server</description>
     <version>1.1</version>
     <organization>
         <name>Red5</name>
@@ -28,8 +28,8 @@
     </mailingLists>
     <developers>
         <developer>
-            <id>Paul Gregoire</id>
-            <email>mondain@gmail.com</email>
+            <id>Dmitry Bezheckov</id>
+            <email>dima00782@gmail.com</email>
         </developer>
     </developers>
     <properties>

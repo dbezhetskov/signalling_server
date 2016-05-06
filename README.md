@@ -1,19 +1,9 @@
-Chat application
+Signalling server
 ================
 
-Red5 WebSocket chat application example.
+Red5 signalling server application.
 
-The example <i>index.html</i> defaults to using a WebSocket connection to localhost on port 8081. This means that the localhost and port must be configured in the <i>red5/conf/jee-container.xml</i> file.
-
-```xml
-<bean id="webSocketTransport" class="org.red5.net.websocket.WebSocketTransport">
-    <property name="addresses">
-        <list>
-            <value>localhost:8081</value>
-        </list>
-    </property>
-</bean>
-```
+It will be merged with apache OpenMeetings server later. 
 
 Build the application from the command line with
 
@@ -21,10 +11,10 @@ Build the application from the command line with
 mvn package
 ```
 
-Deploy your application by copying the war file into your <i>red5/webapps</i> directory.
+Deploy your application by:
 
-After deploy is complete, go to http://localhost:5080/chat/ in your browser (open two tabs if you want to chat back and forth on the same computer).
+copying the war file into your <i>red5/webapps</i> directory
 
-Pre-compiled WAR
-----------------
-https://mega.co.nz/#!YQ12DBLB!jbey-QDIwC_zveM5K2yPpMVBBCTr0025siv6YRvl-Fg
+and copy tomcat-embed-websocket-8.0.33.jar into your red5-server/plugins/ directory. 
+
+After deploy is complete, go to http://localhost:5080/signalling/ in your browser.

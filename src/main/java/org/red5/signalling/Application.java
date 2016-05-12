@@ -27,13 +27,13 @@ public class Application extends MultiThreadedApplicationAdapter implements Appl
 
     @Override
     public boolean appStart(IScope scope) {
-        log.info("Server starting");
+        log.info("Signalling server starting");
         return super.appStart(scope);
     }
 
     @Override
     public void appStop(IScope scope) {
-        log.info("Server stopping");
+        log.info("Signalling server stopping");
         super.appStop(scope);
     }
 

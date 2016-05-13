@@ -11,7 +11,7 @@ var socket;
 var log;
 
 function openConnection() {
-  socket = new WebSocket('ws://localhost:5080/examples/websocket/echoAnnotation');
+  socket = new WebSocket('ws://localhost:5080/signalling/ws');
   log = document.getElementById('log');
 
   socket.onopen = function() {

@@ -4,6 +4,8 @@ import org.red5.logging.Red5LoggerFactory;
 import org.slf4j.Logger;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Writer;
 
 import javax.websocket.OnMessage;
 import javax.websocket.PongMessage;
@@ -16,32 +18,39 @@ import javax.websocket.server.ServerEndpoint;
  * @author Paul Gregoire, Dmitry Bezheckov
  */
 
-@ServerEndpoint("/")
-public class WebSocketChatDataListener {
+@ServerEndpoint("/ws")
+public class WebSocketDataListener {
+	
+	Writer writer;
+	OutputStream stream;
 
-    private static final Logger log = Red5LoggerFactory.getLogger(WebSocketChatDataListener.class, "signalling");
-
-    private Router router;
-
-    public void setRouter(Router router) {
-        this.router = router;
-        this.router.setWsListener(this);
-    }
-
-	public void sendToAll(String contextPath, String message) {
-		// TODO Auto-generated method stub
-	}
+    private static final Logger log = Red5LoggerFactory.getLogger(WebSocketDataListener.class, "signalling");
 	
 	@OnMessage
     public void echoTextMessage(Session session, String msg, boolean last) throws IOException {
-    	System.out.println("echoTextMessage");
-    	System.exit(0);
+		log.info("echoTextMessage");
+		if (writer == null) {
+            writer = session.getBasicRemote().getSendWriter();
+        }
+        writer.write(msg);
+        if (last) {
+            writer.close();
+            writer = null;
+        }
     }
 
     @OnMessage
     public void echoBinaryMessage(byte[] msg, Session session, boolean last) throws IOException {
-    	System.out.println("echoBinaryMessage");
-    	System.exit(0);
+    	log.info("echoBinaryMessage");
+    	if (stream == null) {
+            stream = session.getBasicRemote().getSendStream();
+        }
+        stream.write(msg);
+        stream.flush();
+        if (last) {
+            stream.close();
+            stream = null;
+        }
     }
 
     /**

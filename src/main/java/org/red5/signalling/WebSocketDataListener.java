@@ -6,9 +6,14 @@ import org.slf4j.Logger;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.nio.ByteBuffer;
 
+import javax.websocket.Endpoint;
+import javax.websocket.EndpointConfig;
+import javax.websocket.MessageHandler;
 import javax.websocket.OnMessage;
 import javax.websocket.PongMessage;
+import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 
@@ -18,49 +23,56 @@ import javax.websocket.server.ServerEndpoint;
  * @author Paul Gregoire, Dmitry Bezheckov
  */
 
-@ServerEndpoint("/ws")
-public class WebSocketDataListener {
+public class WebSocketDataListener extends Endpoint {
 	
-	Writer writer;
-	OutputStream stream;
+	@Override
+    public void onOpen(Session session, EndpointConfig endpointConfig) {
+        RemoteEndpoint.Basic remoteEndpointBasic = session.getBasicRemote();
+        session.addMessageHandler(new EchoMessageHandlerText(remoteEndpointBasic));
+        session.addMessageHandler(new EchoMessageHandlerBinary(remoteEndpointBasic));
+    }
 
-    private static final Logger log = Red5LoggerFactory.getLogger(WebSocketDataListener.class, "signalling");
-	
-	@OnMessage
-    public void echoTextMessage(Session session, String msg, boolean last) throws IOException {
-		log.info("echoTextMessage");
-		if (writer == null) {
-            writer = session.getBasicRemote().getSendWriter();
+    private static class EchoMessageHandlerText
+            implements MessageHandler.Partial<String> {
+
+        private final RemoteEndpoint.Basic remoteEndpointBasic;
+
+        private EchoMessageHandlerText(RemoteEndpoint.Basic remoteEndpointBasic) {
+            this.remoteEndpointBasic = remoteEndpointBasic;
         }
-        writer.write(msg);
-        if (last) {
-            writer.close();
-            writer = null;
+
+        @Override
+        public void onMessage(String message, boolean last) {
+            try {
+                if (remoteEndpointBasic != null) {
+                    remoteEndpointBasic.sendText(message, last);
+                }
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
     }
 
-    @OnMessage
-    public void echoBinaryMessage(byte[] msg, Session session, boolean last) throws IOException {
-    	log.info("echoBinaryMessage");
-    	if (stream == null) {
-            stream = session.getBasicRemote().getSendStream();
+    private static class EchoMessageHandlerBinary
+            implements MessageHandler.Partial<ByteBuffer> {
+
+        private final RemoteEndpoint.Basic remoteEndpointBasic;
+
+        private EchoMessageHandlerBinary(RemoteEndpoint.Basic remoteEndpointBasic) {
+            this.remoteEndpointBasic = remoteEndpointBasic;
         }
-        stream.write(msg);
-        stream.flush();
-        if (last) {
-            stream.close();
-            stream = null;
+
+        @Override
+        public void onMessage(ByteBuffer message, boolean last) {
+            try {
+                if (remoteEndpointBasic != null) {
+                    remoteEndpointBasic.sendBinary(message, last);
+                }
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
     }
-
-    /**
-     * Process a received pong. This is a NO-OP.
-     *
-     * @param pm    Ignored.
-     */
-    @OnMessage
-    public void echoPongMessage(PongMessage pm) {
-        // NO-OP
-    }
-
 }

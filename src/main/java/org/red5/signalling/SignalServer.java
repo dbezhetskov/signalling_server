@@ -5,6 +5,7 @@ import org.json.JSONObject;
 import org.red5.logging.Red5LoggerFactory;
 import org.slf4j.Logger;
 import java.io.IOException;
+
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
@@ -36,8 +37,7 @@ public class SignalServer {
 			JSONObject data = new JSONObject(message);
 			log.info("Id: " + data.get("ID"));
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("Error parsing JSON " + e.getMessage());
 		}
     	
         return message + " (from your server)";
@@ -45,7 +45,7 @@ public class SignalServer {
 
     @OnError
     public void onError(Throwable t) {
-        t.printStackTrace();
+    	log.error("Error " + t.getMessage());
     }
 
     @OnClose

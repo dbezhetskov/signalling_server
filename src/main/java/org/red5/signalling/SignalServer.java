@@ -132,6 +132,7 @@ public class SignalServer {
 
     @OnClose
     public void onClose() {
-    	LOG.info("User disconnected");
+    	users.remove(name);
+    	LOG.info("User " + name + " disconnected");
     }
 }

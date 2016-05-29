@@ -25,7 +25,7 @@ public class SignalServer {
 	private static final JSONObject LOGIN_SUCCESS_MESSAGE;
 	private static final JSONObject LOGIN_FAIL_MESSAGE;
 	
-	private final HashMap<String, Session> users = new HashMap<String, Session>();
+	private static final HashMap<String, Session> users = new HashMap<String, Session>();
 	
 	static
 	{
@@ -43,6 +43,9 @@ public class SignalServer {
 		LOGIN_FAIL_MESSAGE = loginFalseMessage;
 	}
 	
+	private String otherName;
+	private String name;
+	
     @OnOpen
     public void onOpen(Session session) throws IOException {
     	LOG.info("User connected");
@@ -55,27 +58,62 @@ public class SignalServer {
     	
     	JSONObject data = null;
     	String type = null;
-    	String id = null;
     	
     	try {
     		data = new JSONObject(message);
-    		id = data.getString("ID");
     		type = data.getString("TYPE");
-			LOG.info("Id: " + id);
 		} catch (JSONException e) {
 			LOG.error("Error parsing JSON " + e.getMessage());
 		}
     	
     	switch (type) {
     	case "Login": {
+    		String id = null;
+    		
+    		try {
+				id = data.getString("ID");
+			} catch (JSONException e) {
+				LOG.error("Error parsing JSON " + e.getMessage());
+			}
+    		
     		LOG.info("User logged in as " + id);
     		if (users.containsKey(id)) {
     			session.getBasicRemote().sendText(LOGIN_FAIL_MESSAGE.toString(), last);
     		}
     		else {
     			users.put(id, session);
+    			name = id;
     			session.getBasicRemote().sendText(LOGIN_SUCCESS_MESSAGE.toString(), last);
     		}
+    		break;
+    	}
+    	case "Offer": {
+    		String targetName = null;
+    		JSONObject offer = null;
+    		
+    		try {
+    			targetName = data.getString("NAME");
+    			offer = data.getJSONObject("OFFER");
+			} catch (JSONException e) {
+				LOG.error("Error parsing JSON " + e.getMessage());
+			}
+    		
+    		Session targetSession = users.get(targetName);    		
+    		if (targetSession != null) {
+    			LOG.info("Sending offer to: " + targetName);
+    			otherName = targetName;
+        		
+        		targetSession.getBasicRemote().sendText(
+        				"{ \"TYPE\" : \"OFFER\","
+        				+ "\"OFFER\" : \"" + offer.toString() +  "\","
+        				+ "\"NAME\" :\"" + name + "\"}", last
+        		);
+    		}
+    		else {
+    			LOG.error("Target seesion is null " + targetName);
+    			LOG.error(users.toString());
+    		}
+    		
     		break;
     	}
     	default:

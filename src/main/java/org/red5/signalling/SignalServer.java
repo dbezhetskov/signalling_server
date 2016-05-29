@@ -18,7 +18,7 @@ import javax.websocket.server.ServerEndpoint;
  * @author Dmitry Bezheckov
  */
 
-@ServerEndpoint("/ws")
+@ServerEndpoint(value = "/ws")
 public class SignalServer {
 	
 	private static final Logger LOG = Red5LoggerFactory.getLogger(SignalServer.class, "signalling");
@@ -45,15 +45,17 @@ public class SignalServer {
 	
 	private String otherName;
 	private String name;
+	private Session session;
 	
     @OnOpen
     public void onOpen(Session session) throws IOException {
-    	LOG.info("User connected");
+    	this.session = session;
         session.getBasicRemote().sendText("Ok, you are connected");
+        LOG.info("User connected");
     }
 
     @OnMessage
-    public void onMessage(Session session, String message, boolean last) throws IOException {
+    public void onMessage(String message) throws IOException {
     	LOG.info("Got message: " + message);
     	
     	JSONObject data = null;
@@ -78,12 +80,12 @@ public class SignalServer {
     		
     		LOG.info("User logged in as " + id);
     		if (users.containsKey(id)) {
-    			session.getBasicRemote().sendText(LOGIN_FAIL_MESSAGE.toString(), last);
+    			session.getBasicRemote().sendText(LOGIN_FAIL_MESSAGE.toString());
     		}
     		else {
     			users.put(id, session);
     			name = id;
-    			session.getBasicRemote().sendText(LOGIN_SUCCESS_MESSAGE.toString(), last);
+    			session.getBasicRemote().sendText(LOGIN_SUCCESS_MESSAGE.toString());
     		}
     		break;
     	}
@@ -106,7 +108,7 @@ public class SignalServer {
         		targetSession.getBasicRemote().sendText(
         				"{ \"TYPE\" : \"OFFER\","
         				+ "\"OFFER\" : \"" + offer.toString() +  "\","
-        				+ "\"NAME\" :\"" + name + "\"}", last
+        				+ "\"NAME\" :\"" + name + "\"}"
         		);
     		}
     		else {
@@ -118,18 +120,18 @@ public class SignalServer {
     	}
     	default:
     		session.getBasicRemote().sendText(
-    				"{ \"TYPE\" : \"Error\", \"Message\" : \"Unrecognized command:" + type +  "\"}", last
+    				"{ \"TYPE\" : \"Error\", \"Message\" : \"Unrecognized command:" + type +  "\"}"
     		);
     	}
     }
 
     @OnError
     public void onError(Throwable t) {
-    	LOG.error("Error " + t.getMessage());
+    	LOG.error("Error " + t.toString(), t);
     }
 
     @OnClose
-    public void onClose(Session session) {
+    public void onClose() {
     	LOG.info("User disconnected");
     }
 }

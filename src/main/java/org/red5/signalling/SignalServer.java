@@ -118,6 +118,35 @@ public class SignalServer {
     		
     		break;
     	}
+    	case "Answer": {
+    		String targetName = null;
+    		JSONObject answer = null;
+    		
+    		try {
+    			targetName = data.getString("NAME");
+    			answer = data.getJSONObject("ANSWER");
+			} catch (JSONException e) {
+				LOG.error("Error parsing JSON " + e.getMessage());
+			}
+    		
+    		Session targetSession = users.get(targetName);    		
+    		if (targetSession != null) {
+    			LOG.info("Sending offer to: " + targetName);
+    			otherName = targetName;
+        		
+        		targetSession.getBasicRemote().sendText(
+        				"{ \"TYPE\" : \"OFFER\","
+        				+ "\"OFFER\" : \"" + answer.toString() +  "\","
+        				+ "\"NAME\" :\"" + name + "\"}"
+        		);
+    		}
+    		else {
+    			LOG.error("Target seesion is null " + targetName);
+    			LOG.error(users.toString());
+    		}
+    		
+    		break;
+    	}
     	default:
     		session.getBasicRemote().sendText(
     				"{ \"TYPE\" : \"Error\", \"Message\" : \"Unrecognized command:" + type +  "\"}"

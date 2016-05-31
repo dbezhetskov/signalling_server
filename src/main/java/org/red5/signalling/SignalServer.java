@@ -78,15 +78,18 @@ public class SignalServer {
 				LOG.error("Error parsing JSON " + e.getMessage());
 			}
     		
-    		LOG.info("User logged in as " + id);
-    		if (users.containsKey(id)) {
-    			session.getBasicRemote().sendText(LOGIN_FAIL_MESSAGE.toString());
+    		if (id != null) {
+    			LOG.info("User logged in as " + id);
+        		if (users.containsKey(id)) {
+        			session.getBasicRemote().sendText(LOGIN_FAIL_MESSAGE.toString());
+        		}
+        		else {
+        			users.put(id, session);
+        			name = id;
+        			session.getBasicRemote().sendText(LOGIN_SUCCESS_MESSAGE.toString());
+        		}
     		}
-    		else {
-    			users.put(id, session);
-    			name = id;
-    			session.getBasicRemote().sendText(LOGIN_SUCCESS_MESSAGE.toString());
-    		}
+    		
     		break;
     	}
     	case "Offer": {
@@ -100,22 +103,23 @@ public class SignalServer {
 				LOG.error("Error parsing JSON " + e.getMessage());
 			}
     		
-    		Session targetSession = users.get(targetName);    		
-    		if (targetSession != null) {
-    			LOG.info("Sending offer to: " + targetName);
-    			otherName = targetName;
-        		
-        		targetSession.getBasicRemote().sendText(
-        				"{ \"TYPE\" : \"OFFER\","
-        				+ "\"OFFER\" : \"" + offer.toString() +  "\","
-        				+ "\"NAME\" :\"" + name + "\"}"
-        		);
+    		if (targetName != null && offer != null) {
+    			Session targetSession = users.get(targetName);    		
+        		if (targetSession != null) {
+        			LOG.info("Sending offer to: " + targetName);
+        			otherName = targetName;
+            		
+            		targetSession.getBasicRemote().sendText(
+            				"{ \"TYPE\" : \"OFFER\","
+            				+ "\"OFFER\" : \"" + offer.toString() +  "\","
+            				+ "\"NAME\" :\"" + name + "\"}"
+            		);
+        		}
+        		else {
+        			LOG.error("Target seesion is null " + targetName);
+        			LOG.error(users.toString());
+        		}
     		}
-    		else {
-    			LOG.error("Target seesion is null " + targetName);
-    			LOG.error(users.toString());
-    		}
-    		
     		break;
     	}
     	case "Answer": {
@@ -129,22 +133,23 @@ public class SignalServer {
 				LOG.error("Error parsing JSON " + e.getMessage());
 			}
     		
-    		Session targetSession = users.get(targetName);    		
-    		if (targetSession != null) {
-    			LOG.info("Sending offer to: " + targetName);
-    			otherName = targetName;
-        		
-        		targetSession.getBasicRemote().sendText(
-        				"{ \"TYPE\" : \"OFFER\","
-        				+ "\"OFFER\" : \"" + answer.toString() +  "\","
-        				+ "\"NAME\" :\"" + name + "\"}"
-        		);
+    		if (targetName != null && answer != null) {
+    			Session targetSession = users.get(targetName);    		
+        		if (targetSession != null) {
+        			LOG.info("Sending offer to: " + targetName);
+        			otherName = targetName;
+            		
+            		targetSession.getBasicRemote().sendText(
+            				"{ \"TYPE\" : \"Answer\","
+            				+ "\"ANSWER\" : \"" + answer.toString() +  "\","
+            				+ "\"NAME\" :\"" + name + "\"}"
+            		);
+        		}
+        		else {
+        			LOG.error("Target seesion is null " + targetName);
+        			LOG.error(users.toString());
+        		}
     		}
-    		else {
-    			LOG.error("Target seesion is null " + targetName);
-    			LOG.error(users.toString());
-    		}
-    		
     		break;
     	}
     	default:

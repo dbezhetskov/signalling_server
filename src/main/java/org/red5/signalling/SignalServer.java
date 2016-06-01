@@ -104,7 +104,7 @@ public class SignalServer {
 			}
     		
     		if (targetName != null && offer != null) {
-    			Session targetSession = users.get(targetName);    		
+    			Session targetSession = users.get(targetName);
         		if (targetSession != null) {
         			LOG.info("Sending offer to: " + targetName);
         			otherName = targetName;
@@ -134,9 +134,9 @@ public class SignalServer {
 			}
     		
     		if (targetName != null && answer != null) {
-    			Session targetSession = users.get(targetName);    		
+    			Session targetSession = users.get(targetName);
         		if (targetSession != null) {
-        			LOG.info("Sending offer to: " + targetName);
+        			LOG.info("Sending answer to: " + targetName);
         			otherName = targetName;
             		
             		targetSession.getBasicRemote().sendText(
@@ -164,9 +164,9 @@ public class SignalServer {
 			}
     		
     		if (targetName != null && candidate != null) {
-    			Session targetSession = users.get(targetName);    		
+    			Session targetSession = users.get(targetName);
         		if (targetSession != null) {
-        			LOG.info("Sending offer to: " + targetName);
+        			LOG.info("Sending candidate to: " + targetName);
         			otherName = targetName;
             		
             		targetSession.getBasicRemote().sendText(
@@ -179,6 +179,34 @@ public class SignalServer {
         			LOG.error(users.toString());
         		}
     		}
+    		break;
+    	}
+    	case "Leave": {
+    		String targetName = null;
+    		
+    		try {
+    			targetName = data.getString("NAME");
+			} catch (JSONException e) {
+				LOG.error("Error parsing JSON " + e.getMessage());
+			}
+    		
+    		if (targetName != null) {
+    			Session targetSession = users.get(targetName);
+        		if (targetSession != null) {
+        			LOG.info("Disconnecting user from: " + targetName);
+            		
+            		targetSession.getBasicRemote().sendText(
+            				"{ \"TYPE\" : \"Leave\" }"
+            		);
+            		
+            		otherName = null;
+        		}
+        		else {
+        			LOG.error("Target seesion is null " + targetName);
+        			LOG.error(users.toString());
+        		}
+    		}
+    		
     		break;
     	}
     	default:
@@ -195,7 +223,30 @@ public class SignalServer {
 
     @OnClose
     public void onClose() {
-    	users.remove(name);
-    	LOG.info("User " + name + " disconnected");
+    	if (name != null) {
+    		LOG.info("User " + name + " disconnected");
+    		users.remove(name);
+    		
+    		if (otherName != null) {
+    			Session targetSession = users.get(otherName);
+        		if (targetSession != null) {
+        			LOG.info("Disconnecting user from: " + otherName);
+            		
+            		try {
+						targetSession.getBasicRemote().sendText(
+								"{ \"TYPE\" : \"Leave\" }"
+						);
+					} catch (IOException e) {
+						LOG.error(e.getMessage());
+					}
+        		}
+        		else {
+        			LOG.error("Target seesion is null " + otherName);
+        			LOG.error(users.toString());
+        		}
+    		}
+    	}
+    	
+    	
     }
 }

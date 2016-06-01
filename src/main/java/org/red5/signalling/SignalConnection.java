@@ -33,8 +33,8 @@ public class SignalConnection {
 		JSONObject loginFalseMessage = null;
 		
 		try {
-			loginTrueMessage = new JSONObject("{ \"TYPE\" : \"Login\", \"SUCCESS\" : \"true\"}");
-			loginFalseMessage = new JSONObject("{ \"TYPE\" : \"Login\", \"SUCCESS\" : \"false\"}");
+			loginTrueMessage = new JSONObject("{ \"type\" : \"login\", \"success\" : \"true\"}");
+			loginFalseMessage = new JSONObject("{ \"type\" : \"login\", \"success\" : \"false\"}");
 		} catch (JSONException e) {
 			LOG.error("json constant haven't constructed " + e.getMessage());
 		}
@@ -63,7 +63,7 @@ public class SignalConnection {
     	
     	try {
     		data = new JSONObject(message);
-    		type = data.getString("TYPE");
+    		type = data.getString("type");
 		} catch (JSONException e) {
 			LOG.error("Error parsing JSON " + e.getMessage());
 		}
@@ -86,7 +86,7 @@ public class SignalConnection {
     		break;
     	default:
     		getSession().getBasicRemote().sendText(
-    				"{ \"TYPE\" : \"Error\", \"Message\" : \"Unrecognized command:" + type +  "\"}"
+    				"{ \"type\" : \"error\", \"message\" : \"Unrecognized command:" + type +  "\"}"
     		);
     	}
     }
@@ -95,7 +95,7 @@ public class SignalConnection {
     	String targetName = null;
 		
 		try {
-			targetName = data.getString("NAME");
+			targetName = data.getString("name");
 		} catch (JSONException e) {
 			LOG.error("Error parsing JSON " + e.getMessage());
 		}
@@ -107,7 +107,7 @@ public class SignalConnection {
     			LOG.info("Disconnecting user from: " + targetName);
         		
         		try {
-					targetSession.getBasicRemote().sendText("{ \"TYPE\" : \"Leave\" }");
+					targetSession.getBasicRemote().sendText("{ \"type\" : \"leave\" }");
 				} catch (IOException e) {
 					LOG.error(e.getMessage());
 				}
@@ -115,7 +115,7 @@ public class SignalConnection {
         		targetConnection.setOtherName(null);
     		}
     		else {
-    			LOG.error("Target seesion is null " + targetName);
+    			LOG.error("Target session is null " + targetName);
     			LOG.error(users.toString());
     		}
 		}
@@ -126,8 +126,8 @@ public class SignalConnection {
 		JSONObject candidate = null;
 		
 		try {
-			targetName = data.getString("NAME");
-			candidate = data.getJSONObject("CANDIDATE");
+			targetName = data.getString("name");
+			candidate = data.getJSONObject("candidate");
 		} catch (JSONException e) {
 			LOG.error("Error parsing JSON " + e.getMessage());
 		}
@@ -139,8 +139,8 @@ public class SignalConnection {
         		
         		try {
 					targetSession.getBasicRemote().sendText(
-							"{ \"TYPE\" : \"Candidate\","
-							+ "\"CANDIDATE\" : \"" + candidate.toString() +  "\"}"
+							"{ \"type\" : \"candidate\","
+							+ "\"candidate\" : \"" + candidate.toString() +  "\"}"
 					);
 				} catch (IOException e) {
 					LOG.error(e.getMessage());
@@ -171,7 +171,7 @@ public class SignalConnection {
         			LOG.info("Disconnecting user from: " + getOtherName());
             		
             		try {
-						targetSession.getBasicRemote().sendText("{ \"TYPE\" : \"Leave\" }");
+						targetSession.getBasicRemote().sendText("{ \"type\" : \"leave\" }");
 					} catch (IOException e) {
 						LOG.error(e.getMessage());
 					}
@@ -191,8 +191,8 @@ public class SignalConnection {
 		JSONObject jsonObject = null;
 		
 		try {
-			targetName = data.getString("NAME");
-			jsonObject = data.getJSONObject(jsonObjName.toUpperCase());
+			targetName = data.getString("name");
+			jsonObject = data.getJSONObject(jsonObjName);
 		} catch (JSONException e) {
 			LOG.error("Error parsing JSON " + e.getMessage());
 		}
@@ -205,9 +205,9 @@ public class SignalConnection {
     			
         		try {
 					targetSession.getBasicRemote().sendText(
-							"{ \"TYPE\" : \"" + jsonObjName + "\","
-							+ "\"" + jsonObjName.toUpperCase() + "\" : \"" + jsonObject.toString() +  "\","
-							+ "\"NAME\" :\"" + name + "\"}"
+							"{ \"type\" : \"" + jsonObjName + "\","
+							+ "\"" + jsonObjName + "\" : \"" + jsonObject.toString() +  "\","
+							+ "\"name\" :\"" + name + "\"}"
 					);
 				} catch (IOException e) {
 					LOG.error(e.getMessage());
@@ -224,7 +224,7 @@ public class SignalConnection {
     	String id = null;
 		
 		try {
-			id = data.getString("ID");
+			id = data.getString("name");
 		} catch (JSONException e) {
 			LOG.error("Error parsing JSON " + e.getMessage());
 		}

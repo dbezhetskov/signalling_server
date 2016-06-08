@@ -6,6 +6,8 @@ import org.red5.logging.Red5LoggerFactory;
 import org.slf4j.Logger;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
+
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
@@ -24,6 +26,8 @@ public class SignalConnection {
 	private static final Logger LOG = Red5LoggerFactory.getLogger(SignalConnection.class, "signalling");
 	private static final JSONObject LOGIN_SUCCESS_MESSAGE;
 	private static final JSONObject LOGIN_FAIL_MESSAGE;
+	private static final JSONObject LEAVE_MESSAGE;
+	private static final JSONObject UNRECOGNIZED_COMMAND_MESSAGE;
 	
 	private static final HashMap<String, SignalConnection> users = new HashMap<String, SignalConnection>();
 	
@@ -31,16 +35,28 @@ public class SignalConnection {
 	{
 		JSONObject loginTrueMessage = null;
 		JSONObject loginFalseMessage = null;
+		JSONObject leaveMessage = null;
+		JSONObject unrecognizedMessage = null;
 		
 		try {
-			loginTrueMessage = new JSONObject("{ \"type\" : \"login\", \"success\" : \"true\"}");
-			loginFalseMessage = new JSONObject("{ \"type\" : \"login\", \"success\" : \"false\"}");
+			loginTrueMessage = new JSONObject()
+					.put("type", "login")
+					.put("success", "true");
+			loginFalseMessage = new JSONObject()
+					.put("type", "login")
+					.put("success", "false");
+			leaveMessage = new JSONObject().put("type", "leave");
+			unrecognizedMessage = new JSONObject()
+					.put("type", "error")
+					.put("message", "Unrecognized command");
 		} catch (JSONException e) {
 			LOG.error("json constant haven't constructed " + e.getMessage());
 		}
 		
 		LOGIN_SUCCESS_MESSAGE = loginTrueMessage;
 		LOGIN_FAIL_MESSAGE = loginFalseMessage;
+		LEAVE_MESSAGE = leaveMessage;
+		UNRECOGNIZED_COMMAND_MESSAGE = unrecognizedMessage; 
 	}
 	
 	private String otherName;
@@ -50,7 +66,6 @@ public class SignalConnection {
     @OnOpen
     public void onOpen(Session session) throws IOException {
     	this.setSession(session);
-        session.getBasicRemote().sendText("Ok, you are connected");
         LOG.info("User connected");
     }
 
@@ -85,9 +100,7 @@ public class SignalConnection {
     		handleLeave(data);
     		break;
     	default:
-    		getSession().getBasicRemote().sendText(
-    				"{ \"type\" : \"error\", \"message\" : \"Unrecognized command:" + type +  "\"}"
-    		);
+    		getSession().getBasicRemote().sendText(UNRECOGNIZED_COMMAND_MESSAGE.toString());
     	}
     }
 
@@ -107,7 +120,7 @@ public class SignalConnection {
     			LOG.info("Disconnecting user from: " + targetName);
         		
         		try {
-					targetSession.getBasicRemote().sendText("{ \"type\" : \"leave\" }");
+					targetSession.getBasicRemote().sendText(LEAVE_MESSAGE.toString());
 				} catch (IOException e) {
 					LOG.error(e.getMessage());
 				}
@@ -138,11 +151,11 @@ public class SignalConnection {
     			LOG.info("Sending candidate to: " + targetName);
         		
         		try {
-					targetSession.getBasicRemote().sendText(
-							"{ \"type\" : \"candidate\","
-							+ "\"candidate\" : \"" + candidate.toString() +  "\"}"
-					);
-				} catch (IOException e) {
+        			JSONObject sendObj = new JSONObject()
+        					.put("type", "candidate")
+        					.put("candidate", candidate);
+					targetSession.getBasicRemote().sendText(sendObj.toString());
+				} catch (IOException | JSONException e) {
 					LOG.error(e.getMessage());
 				}
     		}
@@ -171,7 +184,7 @@ public class SignalConnection {
         			LOG.info("Disconnecting user from: " + getOtherName());
             		
             		try {
-						targetSession.getBasicRemote().sendText("{ \"type\" : \"leave\" }");
+						targetSession.getBasicRemote().sendText(LEAVE_MESSAGE.toString());
 					} catch (IOException e) {
 						LOG.error(e.getMessage());
 					}
@@ -204,12 +217,12 @@ public class SignalConnection {
     			setOtherName(targetName);
     			
         		try {
-					targetSession.getBasicRemote().sendText(
-							"{ \"type\" : \"" + jsonObjName + "\","
-							+ "\"" + jsonObjName + "\" : \"" + jsonObject.toString() +  "\","
-							+ "\"name\" :\"" + name + "\"}"
-					);
-				} catch (IOException e) {
+        			JSONObject sendObj = new JSONObject()
+        					.put("type", jsonObjName)
+        					.put("name", name)
+        					.put(jsonObjName, jsonObject);
+					targetSession.getBasicRemote().sendText(sendObj.toString());
+				} catch (IOException | JSONException e) {
 					LOG.error(e.getMessage());
 				}
     		}

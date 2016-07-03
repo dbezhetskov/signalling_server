@@ -29,10 +29,9 @@ public class SignalConnection {
 	private static final JSONObject LEAVE_MESSAGE;
 	private static final JSONObject UNRECOGNIZED_COMMAND_MESSAGE;
 	
-	private static final HashMap<String, SignalConnection> users = new HashMap<String, SignalConnection>();
+	private static final Map<String, SignalConnection> users = new HashMap<String, SignalConnection>();
 	
-	static
-	{
+	static {
 		JSONObject loginTrueMessage = null;
 		JSONObject loginFalseMessage = null;
 		JSONObject leaveMessage = null;

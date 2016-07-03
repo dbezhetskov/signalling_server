@@ -59,12 +59,11 @@ public class SignalConnection {
 	}
 	
 	private String otherName;
-	private String name;
-	private Session session;
+	private Client client = new Client(null, null);
 	
     @OnOpen
     public void onOpen(Session session) throws IOException {
-    	this.setSession(session);
+    	client.setSession(session);
         LOG.info("User connected");
     }
 
@@ -99,7 +98,7 @@ public class SignalConnection {
     		handleLeave(data);
     		break;
     	default:
-    		getSession().getBasicRemote().sendText(UNRECOGNIZED_COMMAND_MESSAGE.toString());
+    		client.send(UNRECOGNIZED_COMMAND_MESSAGE.toString());
     	}
     }
 
@@ -114,16 +113,10 @@ public class SignalConnection {
 		
 		if (targetName != null) {
 			SignalConnection targetConnection = users.get(targetName);
-			Session targetSession = targetConnection.getSession();
-    		if (targetSession != null) {
+    		if (targetConnection.client.isInitialized()) {
     			LOG.info("Disconnecting user from: " + targetName);
-        		
-        		try {
-					targetSession.getBasicRemote().sendText(LEAVE_MESSAGE.toString());
-				} catch (IOException e) {
-					LOG.error(e.getMessage());
-				}
-        		
+    			
+    			targetConnection.client.send(LEAVE_MESSAGE.toString());
         		targetConnection.setOtherName(null);
     		}
     		else {
@@ -145,16 +138,16 @@ public class SignalConnection {
 		}
 		
 		if (targetName != null && candidate != null) {
-			Session targetSession = users.get(targetName).getSession();
-    		if (targetSession != null) {
+			Client targetClient = users.get(targetName).client;
+    		if (targetClient.isInitialized()) {
     			LOG.info("Sending candidate to: " + targetName);
         		
         		try {
         			JSONObject sendObj = new JSONObject()
         					.put("type", "candidate")
         					.put("candidate", candidate);
-					targetSession.getBasicRemote().sendText(sendObj.toString());
-				} catch (IOException | JSONException e) {
+        			targetClient.send(sendObj.toString());
+				} catch (JSONException e) {
 					LOG.error(e.getMessage());
 				}
     		}
@@ -172,22 +165,16 @@ public class SignalConnection {
 
     @OnClose
     public void onClose() {
-    	if (name != null) {
-    		LOG.info("User " + name + " disconnected");
-    		users.remove(name);
+    	if (client.getId() != null) {
+    		LOG.info("User " + client.getId() + " disconnected");
+    		users.remove(client.getId());
     		
     		if (getOtherName() != null) {
     			SignalConnection targetConnection = users.get(otherName);
-    			Session targetSession = targetConnection.getSession();
-        		if (targetSession != null) {
+        		if (targetConnection.client.isInitialized()) {
         			LOG.info("Disconnecting user from: " + getOtherName());
-            		
-            		try {
-						targetSession.getBasicRemote().sendText(LEAVE_MESSAGE.toString());
-					} catch (IOException e) {
-						LOG.error(e.getMessage());
-					}
-            		
+        			
+        			targetConnection.client.send(LEAVE_MESSAGE.toString());
             		targetConnection.setOtherName(null);
         		}
         		else {
@@ -210,18 +197,18 @@ public class SignalConnection {
 		}
 		
 		if (targetName != null && jsonObject != null) {
-			Session targetSession = users.get(targetName).getSession();
-    		if (targetSession != null) {
-    			LOG.info("Sending " + name + " to: " + targetName);
+			Client targetClient = users.get(targetName).client;
+    		if (targetClient.isInitialized()) {
+    			LOG.info("Sending " + targetClient.getId() + " to: " + targetName);
     			setOtherName(targetName);
     			
         		try {
         			JSONObject sendObj = new JSONObject()
         					.put("type", jsonObjName)
-        					.put("name", name)
+        					.put("name", client.getId())
         					.put(jsonObjName, jsonObject);
-					targetSession.getBasicRemote().sendText(sendObj.toString());
-				} catch (IOException | JSONException e) {
+        			targetClient.send(sendObj.toString());
+				} catch (JSONException e) {
 					LOG.error(e.getMessage());
 				}
     		}
@@ -243,31 +230,16 @@ public class SignalConnection {
 		
 		if (id != null) {
 			LOG.info("User logged in as " + id);
+			
     		if (users.containsKey(id)) {
-    			try {
-					getSession().getBasicRemote().sendText(LOGIN_FAIL_MESSAGE.toString());
-				} catch (IOException e) {
-					LOG.error(e.getMessage());
-				}
+    			client.send(LOGIN_FAIL_MESSAGE.toString());
     		}
     		else {
     			users.put(id, this);
-    			name = id;
-    			try {
-					getSession().getBasicRemote().sendText(LOGIN_SUCCESS_MESSAGE.toString());
-				} catch (IOException e) {
-					LOG.error(e.getMessage());
-				}
+    			client.setId(id);
+    			client.send(LOGIN_SUCCESS_MESSAGE.toString());
     		}
 		}
-	}
-
-	public Session getSession() {
-		return session;
-	}
-
-	public void setSession(Session session) {
-		this.session = session;
 	}
 
 	public String getOtherName() {

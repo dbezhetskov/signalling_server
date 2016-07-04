@@ -4,7 +4,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.red5.logging.Red5LoggerFactory;
 import org.slf4j.Logger;
+
+import com.mp4parser.iso14496.part15.HevcDecoderConfigurationRecord.Array;
+
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,14 +32,19 @@ public class SignalConnection {
 	private static final JSONObject LOGIN_FAIL_MESSAGE;
 	private static final JSONObject LEAVE_MESSAGE;
 	private static final JSONObject UNRECOGNIZED_COMMAND_MESSAGE;
+	private static final JSONObject FAIL_ROOM_EXIST_MESSAGE;
+	private static final JSONObject CREATE_SUCCESS_MESSAGE;
 	
 	private static final Map<String, SignalConnection> users = new HashMap<String, SignalConnection>();
+	private static final Map<String, ArrayList<Client>> rooms = new HashMap<String, ArrayList<Client>>();
 	
 	static {
 		JSONObject loginTrueMessage = null;
 		JSONObject loginFalseMessage = null;
 		JSONObject leaveMessage = null;
 		JSONObject unrecognizedMessage = null;
+		JSONObject failRoomExistMessage = null;
+		JSONObject createSuccessMessage = null;
 		
 		try {
 			loginTrueMessage = new JSONObject()
@@ -48,6 +57,13 @@ public class SignalConnection {
 			unrecognizedMessage = new JSONObject()
 					.put("type", "error")
 					.put("message", "Unrecognized command");
+			failRoomExistMessage = new JSONObject()
+					.put("type", "create")
+					.put("success", "false")
+					.put("message", "the room by specified id alredy exist");
+			createSuccessMessage = new JSONObject()
+					.put("type", "create")
+					.put("success", "true");
 		} catch (JSONException e) {
 			LOG.error("json constant haven't constructed " + e.getMessage());
 		}
@@ -55,7 +71,9 @@ public class SignalConnection {
 		LOGIN_SUCCESS_MESSAGE = loginTrueMessage;
 		LOGIN_FAIL_MESSAGE = loginFalseMessage;
 		LEAVE_MESSAGE = leaveMessage;
-		UNRECOGNIZED_COMMAND_MESSAGE = unrecognizedMessage; 
+		UNRECOGNIZED_COMMAND_MESSAGE = unrecognizedMessage;
+		FAIL_ROOM_EXIST_MESSAGE = failRoomExistMessage;
+		CREATE_SUCCESS_MESSAGE = createSuccessMessage;
 	}
 	
 	private String otherName;
@@ -85,6 +103,9 @@ public class SignalConnection {
     	case "login":
     		handleLogin(data);
     		break;
+    	case "create":
+    		handleCreate(data);
+    		break;
     	case "offer":
     		handleMessageNameWithJSONObj(data, "offer");
     		break;
@@ -102,7 +123,30 @@ public class SignalConnection {
     	}
     }
 
-    private void handleLeave(JSONObject data) {
+	private void handleCreate(JSONObject data) {
+    	String id = null;
+		
+		try {
+			id = data.getString("room");
+		} catch (JSONException e) {
+			LOG.error("Error parsing JSON " + e.getMessage());
+		}
+		
+		if (id != null) {
+			if (!rooms.containsKey(id)) {
+				ArrayList<Client> newRoom = new ArrayList<Client>();
+				newRoom.add(client);
+				rooms.put(id, newRoom);
+				client.send(CREATE_SUCCESS_MESSAGE.toString());
+				LOG.info("Room " + id + " have created by " + client.getId());
+			}
+			else {
+				client.send(FAIL_ROOM_EXIST_MESSAGE.toString());
+			}
+		}
+	}
+
+	private void handleLeave(JSONObject data) {
     	String targetName = null;
 		
 		try {

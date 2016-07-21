@@ -5,8 +5,6 @@ import org.json.JSONObject;
 import org.red5.logging.Red5LoggerFactory;
 import org.slf4j.Logger;
 
-import com.mp4parser.iso14496.part15.HevcDecoderConfigurationRecord.Array;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,6 +32,8 @@ public class SignalConnection {
 	private static final JSONObject UNRECOGNIZED_COMMAND_MESSAGE;
 	private static final JSONObject FAIL_ROOM_EXIST_MESSAGE;
 	private static final JSONObject CREATE_SUCCESS_MESSAGE;
+	private static final JSONObject CONNECT_SUCCESS_MESSAGE;
+	private static final JSONObject CONNECT_FAIL_MESSAGE;
 	
 	private static final Map<String, SignalConnection> users = new HashMap<String, SignalConnection>();
 	private static final Map<String, ArrayList<Client>> rooms = new HashMap<String, ArrayList<Client>>();
@@ -45,6 +45,8 @@ public class SignalConnection {
 		JSONObject unrecognizedMessage = null;
 		JSONObject failRoomExistMessage = null;
 		JSONObject createSuccessMessage = null;
+		JSONObject connectSuccessMessage = null;
+		JSONObject connectFailMessage = null;
 		
 		try {
 			loginTrueMessage = new JSONObject()
@@ -64,6 +66,12 @@ public class SignalConnection {
 			createSuccessMessage = new JSONObject()
 					.put("type", "create")
 					.put("success", "true");
+			connectSuccessMessage = new JSONObject()
+					.put("type", "connect")
+					.put("success", "true");
+			connectFailMessage = new JSONObject()
+					.put("type", "connect")
+					.put("success", "false");
 		} catch (JSONException e) {
 			LOG.error("json constant haven't constructed " + e.getMessage());
 		}
@@ -74,6 +82,8 @@ public class SignalConnection {
 		UNRECOGNIZED_COMMAND_MESSAGE = unrecognizedMessage;
 		FAIL_ROOM_EXIST_MESSAGE = failRoomExistMessage;
 		CREATE_SUCCESS_MESSAGE = createSuccessMessage;
+		CONNECT_SUCCESS_MESSAGE = connectSuccessMessage;
+		CONNECT_FAIL_MESSAGE = connectFailMessage;
 	}
 	
 	private String otherName;
@@ -106,6 +116,9 @@ public class SignalConnection {
     	case "create":
     		handleCreate(data);
     		break;
+    	case "connect":
+    		handleConnect(data);
+    		break;
     	case "offer":
     		handleMessageNameWithJSONObj(data, "offer");
     		break;
@@ -122,6 +135,44 @@ public class SignalConnection {
     		client.send(UNRECOGNIZED_COMMAND_MESSAGE.toString());
     	}
     }
+
+	private void handleConnect(JSONObject data) {
+		String id = null;
+		JSONObject offer = null;
+		
+		try {
+			id = data.getString("room");
+			offer = data.getJSONObject("offer");
+		} catch (JSONException e) {
+			LOG.error("Error parsing JSON " + e.getMessage());
+		}
+		
+		if (id != null && offer != null) {
+			ArrayList<Client>room = rooms.get(id);
+			if (room != null) {
+				room.add(client);
+				client.send(CONNECT_SUCCESS_MESSAGE.toString());
+				LOG.info("The client " + client.getId() + " connect to " + id + " room.");
+				
+				JSONObject invite = null;
+				try {
+					invite = new JSONObject()
+							.put("type", "offer")
+							.put("name", client.getId())
+        					.put("offer", offer.toString());
+				} catch (JSONException e) {
+					LOG.error(e.getMessage());
+				}
+				
+				for (Client client : room) {
+					client.send(invite.toString());
+				}
+				
+				return;
+			}
+		}
+		client.send(CONNECT_FAIL_MESSAGE.toString());
+	}
 
 	private void handleCreate(JSONObject data) {
     	String id = null;
@@ -285,6 +336,8 @@ public class SignalConnection {
     		}
 		}
 	}
+    
+    private native void sendOfferToSaver(String offer);
 
 	public String getOtherName() {
 		return otherName;

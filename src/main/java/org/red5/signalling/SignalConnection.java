@@ -294,7 +294,7 @@ public class SignalConnection {
 		if (targetName != null && jsonObject != null) {
 			Client targetClient = users.get(targetName).client;
     		if (targetClient.isInitialized()) {
-    			LOG.info("Sending " + targetClient.getId() + " to: " + targetName);
+    			LOG.info("Sending " + jsonObjName + " from " + client.getId() +  " to " + targetName);
     			setOtherName(targetName);
     			
         		try {

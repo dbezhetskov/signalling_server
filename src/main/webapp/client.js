@@ -7,13 +7,18 @@ var usernameInput = document.querySelector('#username');
 var loginButton = document.querySelector('#login');
 var callPage = document.querySelector('#call-page');
 var theirUsernameInput = document.querySelector('#their-username');
-var callButton = document.querySelector('#call');
+var connectButton = document.querySelector('#connect');
 var hangUpButton = document.querySelector('#hang-up');
 callPage.style.display = "none";
+
+var configuration = {
+  "iceservers" : [{ "url" : "stun:stun.1.google.com:19302" }]
+};
 
 var yourVideo = document.querySelector("#yours");
 var theirVideo = document.querySelector("#theirs");
 var yourConnection;
+var thiersConnection = [];
 var connectedUser;
 var stream;
 
@@ -29,7 +34,7 @@ loginButton.addEventListener("click", function (event) {
   }
 });
 
-callButton.addEventListener("click", function () {
+connectButton.addEventListener("click", function () {
   var theirUserName = theirUsernameInput.value;
 
   if (theirUserName.length > 0) {
@@ -158,10 +163,6 @@ function startConnection() {
 }
 
 function setupPeerConnection(stream) {
-  var configuration = {
-    "iceservers" : [{ "url" : "stun:stun.1.google.com:19302" }]
-  };
-
   yourConnection = new RTCPeerConnection(configuration);
 
   // Setup stream listening

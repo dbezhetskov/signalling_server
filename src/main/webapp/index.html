@@ -20,21 +20,22 @@
     position: relative;
     display: block;
     margin: 0 auto;
-    width: 500px;
     height: 500px;
-  }
+  }  
   
   #yours {
     width: 150px;
     height: 150px;
     position: absolute;
-    top: 15px;
     right: 15px;
   }
-  #theirs {
-    width: 500px;
-    height: 500px;
+
+  #theirs video {
+    width: 350px;
+    height: 350px;
+    display: inline-block;
   }
+
 </style>
 </head>
 <body>
@@ -45,9 +46,11 @@
   </div>
   <div id="call-page" class="page">
     <video id="yours" autoplay></video>
-    <video id="theirs" autoplay></video>
+    <div id="theirs">
+      <!-- <video id="theirs" autoplay></video> -->
+    </div>
     <input type="text" id="their-username" />
-    <button id="call">Call</button>
+    <button id="connect">Connect</button>
     <button id="hang-up">Hang Up</button>
   </div>
   <script src="client.js"></script>

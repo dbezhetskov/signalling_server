@@ -1,13 +1,14 @@
 var name;
-var connectedUser;
+var room; // you are connected to this room
 var connection = new WebSocket('ws://localhost:5080/signalling/ws');
 
 var loginPage = document.querySelector('#login-page');
 var usernameInput = document.querySelector('#username');
 var loginButton = document.querySelector('#login');
 var callPage = document.querySelector('#call-page');
-var theirUsernameInput = document.querySelector('#their-username');
+var roomIdInput = document.querySelector('#room-id');
 var connectButton = document.querySelector('#connect');
+var createButton = document.querySelector('#create');
 var hangUpButton = document.querySelector('#hang-up');
 callPage.style.display = "none";
 
@@ -17,9 +18,8 @@ var configuration = {
 
 var yourVideo = document.querySelector("#yours");
 var theirVideo = document.querySelector("#theirs");
-var yourConnection;
-var thiersConnection = [];
-var connectedUser;
+var thiersConnections = [];
+var yourConnections = [];
 var stream;
 
 // Login when the user clicks the button
@@ -35,15 +35,41 @@ loginButton.addEventListener("click", function (event) {
 });
 
 connectButton.addEventListener("click", function () {
-  var theirUserName = theirUsernameInput.value;
+  var roomId = roomIdInput.value;
 
-  if (theirUserName.length > 0) {
-    startPeerConnection(theirUserName);
+  if (roomId.length > 0) {
+    room = roomId;
+    send({
+      type : "connect",
+      roomid : roomId
+    });
+  } else {
+    alert("You can't use empty name!");
   }
 });
 
-function startPeerConnection(user) {
-  connectedUser = user;
+createButton.addEventListener("click", function () {
+  var roomId = roomIdInput.value;
+
+  if (roomId.length > 0) {
+    room = roomId;
+    send({
+      type : "create",
+      room : roomId
+    });
+  } else {
+    alert("You can't use empty name!");
+  }
+});
+
+function startPeerConnection(roomId) {
+  
+
+    // if (hasRTCPeerConnection()) {
+//           setupPeerConnection(stream);
+//         } else {
+//           alert("Sorry, your browser does not support WebRTC.");
+//         }
 
   // Begin the offer
   yourConnection.createOffer(function (offer) {
@@ -89,7 +115,19 @@ function onLogin(success) {
     callPage.style.display = "block";
 
     // Get the plumbing ready for a call
-    startConnection();
+    initializeUserCamera();
+  }
+}
+
+function onCreate(success) {
+  if (success === false) {
+    alert("Create room unsuccessful, please try a different name.");
+    room = null;
+  } else {
+    connect
+    connectButton.style.display = "none";
+    createButton.style.display = "none";
+    roomIdInput.style.display = "none";
   }
 }
 
@@ -110,6 +148,9 @@ connection.onmessage = function (message) {
   switch(data.type) {
     case "login":
       onLogin(data.success);
+      break;
+    case "create":
+      onCreate(data.success);
       break;
     case "offer":
       onOffer(data.offer, data.name);
@@ -134,27 +175,16 @@ connection.onerror = function (err) {
 
 // Alias for sending messages in JSON format
 function send(message) {
-  if (connectedUser) {
-    message.name = connectedUser;
-  }
-
   connection.send(JSON.stringify(message));
 }
 
-function startConnection() {
+function initializeUserCamera() {
   if (hasUserMedia()) {
     navigator.getUserMedia({video : true, audio : false},
       function (myStream) {
         stream = myStream;
         yourVideo.src = window.URL.createObjectURL(stream);
-
-        if (hasRTCPeerConnection()) {
-          setupPeerConnection(stream);
-        } else {
-          alert("Sorry, your browser does not support WebRTC.");
-        }
-      },
-      function (error) {
+      }, function (error) {
         console.log(error);
       });
   } else {

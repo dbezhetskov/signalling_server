@@ -189,7 +189,7 @@ public class SignalConnection {
 				newRoom.add(client);
 				rooms.put(id, newRoom);
 				client.send(CREATE_SUCCESS_MESSAGE.toString());
-				LOG.info("Room " + id + " have created by " + client.getId());
+				LOG.info("Room " + id + " has created by " + client.getId());
 			}
 			else {
 				client.send(FAIL_ROOM_EXIST_MESSAGE.toString());

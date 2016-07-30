@@ -108,7 +108,7 @@ function onCandidate(candidate) {
 }
 
 function onLogin(success) {
-  if (success === false) {
+  if (success == "false") {
     alert("Login unsuccessful, please try a different name.");
   } else {
     loginPage.style.display = "none";
@@ -120,7 +120,7 @@ function onLogin(success) {
 }
 
 function onCreate(success) {
-  if (success === false) {
+  if (success == "false") {
     alert("Create room unsuccessful, please try a different name.");
     room = null;
   } else {

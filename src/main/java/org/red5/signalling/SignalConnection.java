@@ -138,34 +138,33 @@ public class SignalConnection {
 
 	private void handleConnect(JSONObject data) {
 		String id = null;
-		JSONObject offer = null;
 		
 		try {
 			id = data.getString("room");
-			offer = data.getJSONObject("offer");
 		} catch (JSONException e) {
 			LOG.error("Error parsing JSON " + e.getMessage());
 		}
 		
-		if (id != null && offer != null) {
-			ArrayList<Client>room = rooms.get(id);
+		if (id != null) {
+			ArrayList<Client> room = rooms.get(id);
 			if (room != null) {
 				room.add(client);
 				client.send(CONNECT_SUCCESS_MESSAGE.toString());
-				LOG.info("The client " + client.getId() + " connect to " + id + " room.");
+				LOG.info("The client " + client.getId() + " connects to " + id + " room.");
 				
 				JSONObject invite = null;
 				try {
 					invite = new JSONObject()
-							.put("type", "offer")
-							.put("name", client.getId())
-        					.put("offer", offer.toString());
+							.put("type", "connect")
+							.put("name", client.getId());
 				} catch (JSONException e) {
 					LOG.error(e.getMessage());
 				}
 				
 				for (Client client : room) {
-					client.send(invite.toString());
+					if (client.getId() != this.client.getId()) {
+						client.send(invite.toString());
+					}
 				}
 				
 				return;
@@ -240,7 +239,8 @@ public class SignalConnection {
         		try {
         			JSONObject sendObj = new JSONObject()
         					.put("type", "candidate")
-        					.put("candidate", candidate);
+        					.put("candidate", candidate)
+        					.put("name", client.getId());
         			targetClient.send(sendObj.toString());
 				} catch (JSONException e) {
 					LOG.error(e.getMessage());

@@ -1,4 +1,4 @@
-var name;
+var name; // yours nickname
 var room; // you are connected to this room
 var connection = new WebSocket('ws://localhost:5080/signalling/ws');
 
@@ -6,20 +6,19 @@ var loginPage = document.querySelector('#login-page');
 var usernameInput = document.querySelector('#username');
 var loginButton = document.querySelector('#login');
 var callPage = document.querySelector('#call-page');
+var thiersVideoContainer = document.querySelector('#theirs');
 var roomIdInput = document.querySelector('#room-id');
 var connectButton = document.querySelector('#connect');
 var createButton = document.querySelector('#create');
 var hangUpButton = document.querySelector('#hang-up');
+var yourVideo = document.querySelector("#yours");
 callPage.style.display = "none";
 
 var configuration = {
   "iceservers" : [{ "url" : "stun:stun.1.google.com:19302" }]
 };
-
-var yourVideo = document.querySelector("#yours");
-var theirVideo = document.querySelector("#theirs");
-var thiersConnections = [];
-var yourConnections = [];
+var thiersVideos = [];
+var yourConnections = new Map();
 var stream;
 
 // Login when the user clicks the button
@@ -41,7 +40,7 @@ connectButton.addEventListener("click", function () {
     room = roomId;
     send({
       type : "connect",
-      roomid : roomId
+      room : roomId
     });
   } else {
     alert("You can't use empty name!");
@@ -63,14 +62,6 @@ createButton.addEventListener("click", function () {
 });
 
 function startPeerConnection(roomId) {
-  
-
-    // if (hasRTCPeerConnection()) {
-//           setupPeerConnection(stream);
-//         } else {
-//           alert("Sorry, your browser does not support WebRTC.");
-//         }
-
   // Begin the offer
   yourConnection.createOffer(function (offer) {
     send({
@@ -85,26 +76,60 @@ function startPeerConnection(roomId) {
 }
 
 function onOffer(offer, name) {
-  connectedUser = name;
-  yourConnection.setRemoteDescription(new RTCSessionDescription(offer));
+  let connection = new RTCPeerConnection(configuration);
+  connection.setRemoteDescription(new RTCSessionDescription(offer));
+  yourConnections.set(name, connection);
 
-  yourConnection.createAnswer(function (answer) {
-    yourConnection.setLocalDescription(answer);
+  let video = document.createElement('video');
+  video.autoplay = true;
+  thiersVideoContainer.appendChild(video);
+
+  // Setup stream listening
+  connection.addStream(stream);
+  connection.ontrack = function (e) {
+    video.src = window.URL.createObjectURL(e.streams[0]);
+  };
+
+  // Begin the answer
+  connection.createAnswer(function (answer) {
+    connection.setLocalDescription(answer);
     send({
       type : "answer",
-      answer : answer
+      answer : answer,
+      name : name
     });
   }, function (error) {
-    alert("An error has occurred");
+    alert("An error has occurred in answer: " + error);
   });
+
+  // Setup ice handling
+  connection.onicecandidate = function (event) {
+    if (event.candidate) {
+      send({
+        type : "candidate",
+        candidate : event.candidate,
+        name : name
+      });
+    }
+  };
 }
 
-function onAnswer(answer) {
-  yourConnection.setRemoteDescription(new RTCSessionDescription(answer));
+function onAnswer(answer, name) {
+  let connection = yourConnections.get(name);
+  if (connection != null) {
+    connection.setRemoteDescription(new RTCSessionDescription(answer));
+  } else {
+    alert("Anwser: Can't find " + name + " in connections map");
+  }
 }
 
-function onCandidate(candidate) {
-  yourConnection.addIceCandidate(new RTCIceCandidate(candidate));
+function onCandidate(candidate, name) {
+  let connection = yourConnections.get(name);
+  if (connection != null) {
+    connection.addIceCandidate(new RTCIceCandidate(candidate));
+  } else {
+    alert("Candidate: Can't find " + name + " in connections map");
+  }
 }
 
 function onLogin(success) {
@@ -124,10 +149,50 @@ function onCreate(success) {
     alert("Create room unsuccessful, please try a different name.");
     room = null;
   } else {
-    connect
     connectButton.style.display = "none";
     createButton.style.display = "none";
     roomIdInput.style.display = "none";
+  }
+}
+
+function onConnect(name) {
+  if (name) {
+    let connection = new RTCPeerConnection(configuration);
+
+    let video = document.createElement('video');
+    video.autoplay = true;
+    thiersVideoContainer.appendChild(video);
+
+    yourConnections.set(name, connection);
+
+    // Setup stream listening
+    connection.addStream(stream);
+    connection.ontrack = function (e) {
+      video.src = window.URL.createObjectURL(e.streams[0]);
+    };
+
+    // Begin the offer
+    connection.createOffer(function (offer) {
+      send({
+        type : "offer",
+        offer : offer,
+        name : name
+      });
+      connection.setLocalDescription(offer);
+    }, function (error) {
+      alert("An error has occurred in onConnect");
+    });
+
+    // Setup ice handling
+    connection.onicecandidate = function (event) {
+      if (event.candidate) {
+        send({
+          type : "candidate",
+          candidate : event.candidate,
+          name : name
+        });
+      }
+    };
   }
 }
 
@@ -152,14 +217,17 @@ connection.onmessage = function (message) {
     case "create":
       onCreate(data.success);
       break;
+    case "connect":
+      onConnect(data.name);
+      break;
     case "offer":
       onOffer(data.offer, data.name);
       break;
     case "answer":
-      onAnswer(data.answer);
+      onAnswer(data.answer, data.name);
       break;
     case "candidate":
-      onCandidate(data.candidate);
+      onCandidate(data.candidate, data.name);
       break;
     case "leave":
       onLeave();
@@ -175,6 +243,7 @@ connection.onerror = function (err) {
 
 // Alias for sending messages in JSON format
 function send(message) {
+  console.log("We send " + JSON.stringify(message));
   connection.send(JSON.stringify(message));
 }
 
@@ -184,9 +253,13 @@ function initializeUserCamera() {
       function (myStream) {
         stream = myStream;
         yourVideo.src = window.URL.createObjectURL(stream);
-      }, function (error) {
-        console.log(error);
-      });
+        if (!hasRTCPeerConnection()) {
+          alert("Sorry, your browser does not support WebRTC.");
+          connection = null; // nothing to send to the signal server
+        }},
+        function (error) {
+          console.log(error);
+        });
   } else {
     alert("Sorry, your browser does not support WebRTC.");
   }

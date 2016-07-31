@@ -7,8 +7,8 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
@@ -35,8 +35,8 @@ public class SignalConnection {
 	private static final JSONObject CONNECT_SUCCESS_MESSAGE;
 	private static final JSONObject CONNECT_FAIL_MESSAGE;
 	
-	private static final Map<String, SignalConnection> users = new HashMap<String, SignalConnection>();
-	private static final Map<String, ArrayList<Client>> rooms = new HashMap<String, ArrayList<Client>>();
+	private static final Map<String, SignalConnection> users = new ConcurrentHashMap<String, SignalConnection>();
+	private static final Map<String, ArrayList<Client>> rooms = new ConcurrentHashMap<String, ArrayList<Client>>();
 	
 	static {
 		JSONObject loginTrueMessage = null;

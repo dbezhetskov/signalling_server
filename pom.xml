@@ -74,8 +74,7 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <version>2.4</version>
                 <configuration>
-                    <packagingIncludes>*.html,*.swf,*.js,*.swz,WEB-INF/*.properties,WEB-INF/*.xml,WEB-INF/classes/**</packagingIncludes>
-                    <packagingExcludes>WEB-INF/lib/*.jar</packagingExcludes>
+                    <packagingIncludes>*.html,*.swf,*.js,*.swz,WEB-INF/*.properties,WEB-INF/*.xml,WEB-INF/lib/*.jar,WEB-INF/classes/**</packagingIncludes>
                 </configuration>
             </plugin>
             <plugin>

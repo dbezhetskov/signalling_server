@@ -47,6 +47,12 @@ connectButton.addEventListener("click", function () {
   }
 });
 
+hangUpButton.addEventListener("click", function (event) {
+  send({
+    type : "leave",
+  });
+});
+
 createButton.addEventListener("click", function () {
   var roomId = roomIdInput.value;
 
@@ -197,7 +203,13 @@ function onConnect(name) {
 }
 
 function onLeave() {
-  console.log("TODO : onLeave not implemented");
+  thiersVideos = [];
+  yourConnections.clear();
+
+  // pop all video tags
+  while (thiersVideoContainer.firstChild) {
+    thiersVideoContainer.removeChild(thiersVideoContainer.firstChild);
+  }
 }
   
 connection.onopen = function () {

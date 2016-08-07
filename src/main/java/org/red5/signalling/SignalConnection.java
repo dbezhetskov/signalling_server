@@ -129,7 +129,7 @@ public class SignalConnection {
     		handleCandidate(data);
     		break;
     	case "leave":
-    		handleLeave(data);
+    		handleLeave();
     		break;
     	default:
     		client.send(UNRECOGNIZED_COMMAND_MESSAGE.toString());
@@ -167,6 +167,8 @@ public class SignalConnection {
 					}
 				}
 				
+				client.setRoom(id);
+				
 				return;
 			}
 		}
@@ -189,6 +191,7 @@ public class SignalConnection {
 				rooms.put(id, newRoom);
 				client.send(CREATE_SUCCESS_MESSAGE.toString());
 				LOG.info("Room " + id + " has created by " + client.getId());
+				client.setRoom(id);
 			}
 			else {
 				client.send(FAIL_ROOM_EXIST_MESSAGE.toString());
@@ -196,27 +199,30 @@ public class SignalConnection {
 		}
 	}
 
-	private void handleLeave(JSONObject data) {
-    	String targetName = null;
-		
-		try {
-			targetName = data.getString("name");
-		} catch (JSONException e) {
-			LOG.error("Error parsing JSON " + e.getMessage());
-		}
-		
-		if (targetName != null) {
-			SignalConnection targetConnection = users.get(targetName);
-    		if (targetConnection.client.isInitialized()) {
-    			LOG.info("Disconnecting user from: " + targetName);
+	private void handleLeave() {	
+		if (client.getId() != null) {
+			
+			String roomId = client.getRoom();
+    		if (roomId != null) {
+    			ArrayList<Client> room = rooms.get(roomId);
     			
-    			targetConnection.client.send(LEAVE_MESSAGE.toString());
-        		targetConnection.setOtherName(null);
+    			assert(room != null);
+    			
+    			for (int i = 0; i < room.size(); ++i) {
+    				if (room.get(i).getId() == client.getId()) {
+    					room.remove(i);
+    					break;
+    				}
+    			}
+    			
+    			client.setRoom(null);
     		}
-    		else {
-    			LOG.error("Target session is null " + targetName);
-    			LOG.error(users.toString());
-    		}
+    		
+			client.send(LEAVE_MESSAGE.toString());
+		}
+		else {
+			LOG.error("Target session is null " + client.getId());
+			LOG.error(users.toString());
 		}
 	}
 
@@ -264,19 +270,7 @@ public class SignalConnection {
     		LOG.info("User " + client.getId() + " disconnected");
     		users.remove(client.getId());
     		
-    		if (getOtherName() != null) {
-    			SignalConnection targetConnection = users.get(otherName);
-        		if (targetConnection.client.isInitialized()) {
-        			LOG.info("Disconnecting user from: " + getOtherName());
-        			
-        			targetConnection.client.send(LEAVE_MESSAGE.toString());
-            		targetConnection.setOtherName(null);
-        		}
-        		else {
-        			LOG.error("Target seesion is null " + getOtherName());
-        			LOG.error(users.toString());
-        		}
-    		}
+    		handleLeave();
     	}	
     }
     
@@ -295,7 +289,6 @@ public class SignalConnection {
 			Client targetClient = users.get(targetName).client;
     		if (targetClient.isInitialized()) {
     			LOG.info("Sending " + jsonObjName + " from " + client.getId() +  " to " + targetName);
-    			setOtherName(targetName);
     			
         		try {
         			JSONObject sendObj = new JSONObject()
@@ -338,12 +331,4 @@ public class SignalConnection {
 	}
     
     private native void sendOfferToSaver(String offer);
-
-	public String getOtherName() {
-		return otherName;
-	}
-
-	public void setOtherName(String otherName) {
-		this.otherName = otherName;
-	}
 }

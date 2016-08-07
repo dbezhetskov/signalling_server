@@ -12,6 +12,7 @@ public class Client {
 	
 	private String id;
 	private Session session;
+	private String room;
 	
 	public Client(String id, Session session) {
 		this.setId(id);
@@ -40,5 +41,13 @@ public class Client {
 
 	public void setSession(Session session) {
 		this.session = session;
+	}
+
+	public String getRoom() {
+		return room;
+	}
+
+	public void setRoom(String room) {
+		this.room = room;
 	}
 }

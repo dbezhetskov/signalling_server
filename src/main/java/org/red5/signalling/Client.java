@@ -8,7 +8,7 @@ import org.red5.logging.Red5LoggerFactory;
 import org.slf4j.Logger;
 
 public class Client {
-	private static final Logger LOG = Red5LoggerFactory.getLogger(Client.class, "client");
+	private static final Logger LOG = Red5LoggerFactory.getLogger(Client.class, "signalling");
 	
 	private String id;
 	private Session session;

@@ -5,6 +5,7 @@ import java.io.IOException;
 import javax.websocket.Session;
 
 import org.red5.logging.Red5LoggerFactory;
+import org.red5.webrtc.PeerConnection;
 import org.slf4j.Logger;
 
 public class Client {
@@ -13,6 +14,7 @@ public class Client {
 	private String id;
 	private Session session;
 	private String room;
+	private PeerConnection nativeClient;
 	
 	public Client(String id, Session session) {
 		this.setId(id);
@@ -49,5 +51,11 @@ public class Client {
 
 	public void setRoom(String room) {
 		this.room = room;
+	}
+
+	public void setSaveOption(boolean saveVideo) {
+		if (saveVideo) {
+			nativeClient = new PeerConnection();
+		}
 	}
 }

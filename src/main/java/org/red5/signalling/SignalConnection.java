@@ -86,7 +86,6 @@ public class SignalConnection {
 		CONNECT_FAIL_MESSAGE = connectFailMessage;
 	}
 	
-	private String otherName;
 	private Client client = new Client(null, null);
 	
     @OnOpen
@@ -192,6 +191,10 @@ public class SignalConnection {
 				client.send(CREATE_SUCCESS_MESSAGE.toString());
 				LOG.info("Room " + id + " has created by " + client.getId());
 				client.setRoom(id);
+				
+				// turn on save video option on client
+				client.setSaveOption(true);
+				
 			}
 			else {
 				client.send(FAIL_ROOM_EXIST_MESSAGE.toString());
@@ -329,6 +332,4 @@ public class SignalConnection {
     		}
 		}
 	}
-    
-    private native void sendOfferToSaver(String offer);
 }
